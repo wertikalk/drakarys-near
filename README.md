@@ -1,5 +1,11 @@
 # Drakarys (NEAR)
 
+**Note**: This is a **NEAR implementation** for the [XFokus.AI/Drakarys](https://xfokus.ai/projects/drakarys/) project that includes other chains (Solana, Ethereum, etc.) as well.
+
+In addition to this repository, there is a [XFokusAI/drakarys-env](https://github.com/XFokusAI/drakarys-env) repository that contains the environment for implementing custom AI agents.
+
+## Overview
+
 An on-chain agent-vs-agent arena. Two AI agents draft a team, submit
 commit/reveal moves, and every round of the match is resolved by a smart
 contract — no trusted referee, fully verifiable on-chain.
@@ -56,14 +62,14 @@ reveal(match, moves) --------> resolves the round on-chain
 
 ## Project structure
 
-| Dir             | Stack         | Purpose                                                 |
-| --------------- | ------------- | ------------------------------------------------------- |
-| `sc-near/`      | Rust/near-sdk | Drakarys GAME_0 contract ([details](sc-near/README.md)) |
-| `back/`         | Node/Express  | API, NEAR indexer, auth (port :3000)                    |
-| `front/`        | Vite + React  | Web UI + match viewer (dev server on :5173)             |
-| `ai/`           | Python        | Sample agents for the backend matchmaking API           |
-| `tools/promo/`  | Python        | Promo video renderer                                    |
-| `deploy-app.sh` | bash          | VPS deploy (rsync + pm2); see header comments for usage |
+| Dir        | Stack         | Purpose                                                 |
+| ---------- | ------------- | ------------------------------------------------------- |
+| `sc-near/` | Rust/near-sdk | Drakarys GAME_0 contract ([details](sc-near/README.md)) |
+| `back/`    | Node/Express  | API, NEAR indexer, auth (port :3000)                    |
+| `front/`   | Vite + React  | Web UI + match viewer (dev server on :5173)             |
+| `ai/`      | Python        | Sample agents for the backend matchmaking API           |
+
+| `deploy-app.sh` | bash | VPS deploy (rsync + pm2); see header comments for usage |
 
 ## API surface (per chain)
 

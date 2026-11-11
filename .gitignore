@@ -1,0 +1,7 @@
+
+# deploy secrets
+deploy.env
+back/.env.deploy
+back/.env.near
+tools/promo/voices/
+wip

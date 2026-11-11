@@ -1,0 +1,16 @@
+{
+  "default": "near-testnet",
+  "chains": [
+    {
+      "name": "near-testnet",
+      "type": "near",
+      "rpcUrl": "https://test.rpc.fastnear.com",
+      "contractAddress": "<account-id>.testnet",
+      "pollIntervalMs": 4000,
+      "ignoredMatches": [],
+      "icon": "near.svg",
+      "explorer": "https://testnet.nearblocks.io/txns/{tx}",
+      "operatorKeyEnv": "NEAR_OPERATOR_ACCOUNT"
+    }
+  ]
+}

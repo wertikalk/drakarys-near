@@ -60,13 +60,11 @@ const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
 // small seeds (<2^53) - the JSON arg serializer is exact below that
 const seed = () => Math.floor(Math.random() * 2 ** 40);
 
-function makeMove(stateIdx, team, shoot) {
-  // every outfield player pushes toward the opponent's goal (team 0 attacks
-  // +x, team 1 attacks -x) with some lateral drift; the contract pins the
-  // goalkeeper (idx 0) and caps deltas at +-5
-  const dir = team === 0 ? 1 : -1;
+function makeMove(stateIdx, shoot) {
+  // every outfield player moves randomly within the contract's delta cap
+  // of +-5 on both axes; the contract pins the goalkeeper (idx 0)
   const d = Array.from({ length: 11 }, (_, j) =>
-    j === 0 ? [0, 0] : [dir * randInt(1, 5), randInt(-5, 5)],
+    j === 0 ? [0, 0] : [randInt(-5, 5), randInt(-5, 5)],
   );
   return {
     stateIdx,
@@ -102,10 +100,7 @@ const toContractMove = (m) => ({
 
 console.log("playing 20 rounds of commit/reveal on testnet ...");
 for (let round = 0; round < N_ROUNDS; round++) {
-  const moves = [
-    makeMove(round, 0, round % 4 === 3),
-    makeMove(round, 1, false),
-  ];
+  const moves = [makeMove(round, round % 4 === 3), makeMove(round, false)];
   const commitments = [
     moveCommitment(matchIdx, moves[0]),
     moveCommitment(matchIdx, moves[1]),

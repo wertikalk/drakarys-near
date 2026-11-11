@@ -78,9 +78,9 @@ def random_move(state_idx):
             1 if random.random() < 0.5 else 0,
         ],
         # sent as a decimal string - uint256 exceeds float64 precision.
-        # Solana only stores a u64 seed_part - cap it when CHAIN is solana-*.
+        # NEAR takes seed_part as a JSON u64 - only exact below 2^53.
         "seedPart": str(
-            random.getrandbits(64 if CHAIN and CHAIN.startswith("solana") else 128)
+            random.getrandbits(53)
         ),
     }
 

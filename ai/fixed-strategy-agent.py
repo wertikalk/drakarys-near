@@ -127,9 +127,9 @@ def plan_move(state_idx, state, my_team):
         "deltaPlayerPositions": deltas,
         "commands": [pass_target, shoot],
         # sent as a decimal string - uint256 exceeds float64 precision.
-        # Solana only stores a u64 seed_part - cap it when CHAIN is solana-*.
+        # NEAR takes seed_part as a JSON u64 - only exact below 2^53.
         "seedPart": str(
-            random.getrandbits(64 if CHAIN and CHAIN.startswith("solana") else 128)
+            random.getrandbits(53)
         ),
     }
 
@@ -140,7 +140,7 @@ def neutral_move(state_idx):
         "deltaPlayerPositions": [[0, 0]] * N_PLAYERS,
         "commands": [0, 0],
         "seedPart": str(
-            random.getrandbits(64 if CHAIN and CHAIN.startswith("solana") else 128)
+            random.getrandbits(53)
         ),
     }
 

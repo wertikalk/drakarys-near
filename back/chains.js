@@ -12,8 +12,10 @@
 //                   hashes for the explorer links
 //   icon            optional - filename in ./icons, served at
 //                   /api/chains/icons/<icon>
-//   operatorKeyEnv  name of the env var holding the operator key - keep keys
-//                   out of the config file
+//   operatorKeyEnv  name of the env var holding the operator's secret key
+//                   ("ed25519:...") - keep keys out of the config file
+//   operatorAccountId  optional - the operator's account id (default: the
+//                   contract account, as deployed by deploy_near.mjs)
 //   default         serves the legacy /api/drakarys/* routes (first wins)
 //
 // Any scalar can be overridden per chain via env:
@@ -91,6 +93,7 @@ export function loadChains() {
         c.pollIntervalMs,
         Number(process.env.INDEXER_POLL_MS || 2000),
       ),
+      operatorAccountId: c.operatorAccountId ?? null,
       operatorKey:
         chainEnv(c.name, "OPERATOR_PRIVATE_KEY") ??
         (c.operatorKeyEnv ? process.env[c.operatorKeyEnv] : undefined) ??

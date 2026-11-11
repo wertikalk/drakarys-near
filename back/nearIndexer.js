@@ -205,7 +205,7 @@ export function createNearIndexer({
               stateIdx: num(e.state_idx),
               data: e.data.map((c) => Buffer.from(c).toString("hex")),
               signatures: entry?.metadata?.agents ?? [],
-              txHash: `near:${chain}:${matchIdx}:${num(e.state_idx)}:commit`,
+              txHash: null,
               blockNumber: null,
             }),
           `commit ${matchIdx}/${num(e.state_idx)}`,

@@ -167,8 +167,9 @@ export function insertCommit(chain, row) {
     `INSERT INTO commits (chain, match_idx, state_idx, data, signatures, sent, tx_ok, tx_hash, block_number)
      VALUES ($1, $2, $3, $4, $5, true, true, $6, $7)
      ON CONFLICT (chain, match_idx, state_idx) DO UPDATE SET
-       data = EXCLUDED.data, signatures = EXCLUDED.signatures,
-       tx_hash = EXCLUDED.tx_hash, block_number = EXCLUDED.block_number,
+       data = EXCLUDED.data,
+       tx_hash = COALESCE(EXCLUDED.tx_hash, commits.tx_hash),
+       block_number = COALESCE(EXCLUDED.block_number, commits.block_number),
        sent = true, tx_ok = true`,
     [
       chain,

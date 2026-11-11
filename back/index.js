@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { loadChains } from "./chains.js";
 import { createNearIndexer } from "./nearIndexer.js";
+import { createNearMatchmaking } from "./nearMatchmaking.js";
 import { createDrakarysApi, createIndexerApi } from "./api.js";
 import { createAuthApi } from "./auth.js";
 import { fileURLToPath } from "node:url";
@@ -18,8 +19,8 @@ const FRONT_DIST =
   process.env.FRONT_DIST || path.join(BASE_DIR, "..", "front", "dist");
 const FRONT_INDEX = path.join(FRONT_DIST, "index.html");
 
-// One runtime per configured chain: own indexer poll loop, and (once the
-// NEAR relay lands) its own matchmaking relay.
+// One runtime per configured chain: own indexer poll loop, and (if an
+// operator key is set) its own matchmaking relay.
 const { chains, defaultName } = loadChains();
 const runtimes = new Map(); // name -> { chain, indexer, matchmaking }
 
@@ -34,12 +35,21 @@ for (const chain of chains) {
     onMatchStarted: (matchIdx) =>
       console.log(`[indexer:${chain.name}] match ${matchIdx} started`),
   });
-  const matchmaking = null;
-  console.warn(
-    chain.operatorKey
-      ? `[matchmaking:${chain.name}] NEAR relay not implemented yet - agent endpoints disabled`
-      : `[matchmaking:${chain.name}] no operator key - agent endpoints disabled`,
-  );
+  let matchmaking = null;
+  if (chain.operatorKey) {
+    matchmaking = createNearMatchmaking({
+      label: chain.name,
+      rpcUrl: chain.rpcUrl,
+      contractAddress: chain.contractAddress,
+      operatorKey: chain.operatorKey,
+      operatorAccountId: chain.operatorAccountId ?? undefined,
+      indexer,
+    });
+  } else {
+    console.warn(
+      `[matchmaking:${chain.name}] no operator key - agent endpoints disabled`,
+    );
+  }
   runtimes.set(chain.name, { chain, indexer, matchmaking });
 }
 

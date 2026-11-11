@@ -60,16 +60,52 @@ const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
 // small seeds (<2^53) - the JSON arg serializer is exact below that
 const seed = () => Math.floor(Math.random() * 2 ** 40);
 
-function makeMove(stateIdx, shoot) {
+const FIELD_W = 1024;
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+// Current on-chain match (null before the first commit). Optimistic
+// finality so the previous round's reveal is visible right away.
+const viewMatch = () =>
+  provider.callFunction({
+    contractId: CONTRACT,
+    method: "get_match",
+    args: { match_idx: matchIdx },
+    blockQuery: { finality: "optimistic" },
+  });
+
+// `view` is the match as of the previous round (unused in round 0, which
+// only reveals the seed).
+function makeMove(stateIdx, team, view) {
   // every outfield player moves randomly within the contract's delta cap
   // of +-5 on both axes; the contract pins the goalkeeper (idx 0)
   const d = Array.from({ length: 11 }, (_, j) =>
     j === 0 ? [0, 0] : [randInt(-5, 5), randInt(-5, 5)],
   );
+  const commands = [0, 0];
+  if (view && view.state.has_ball_team_idx === team) {
+    // Where each of our players ends up this round (delta * speed, clamped
+    // to the field) - passes and shots resolve after the move.
+    const xs = view.state.teams[team].player_positions.map((pos, j) =>
+      j === 0
+        ? pos[0]
+        : clamp(pos[0] + d[j][0] * view.player_stats[team][j][1], 0, FIELD_W),
+    );
+    // how deep a player is in the opposing half (team 0 attacks +x)
+    const depth = (j) =>
+      team === 0 ? xs[j] - FIELD_W / 2 : FIELD_W / 2 - xs[j];
+    // pass to our most advanced player (passing to the holder = no pass)
+    // and shoot whenever he is in the opposing half - goals only count
+    // from there
+    const target = xs
+      .map((_, j) => j)
+      .reduce((a, j) => (depth(j) > depth(a) ? j : a));
+    commands[0] = target;
+    commands[1] = depth(target) > 0 ? 1 : 0;
+  }
   return {
     stateIdx,
     deltaPlayerPositions: d,
-    commands: [0, shoot ? 1 : 0],
+    commands,
     seedPart: seed(),
   };
 }
@@ -100,7 +136,14 @@ const toContractMove = (m) => ({
 
 console.log("playing 20 rounds of commit/reveal on testnet ...");
 for (let round = 0; round < N_ROUNDS; round++) {
-  const moves = [makeMove(round, round % 4 === 3), makeMove(round, false)];
+  // wait until the previous round's state is visible to the view call
+  let view = null;
+  for (let i = 0; round > 0 && i < 20; i++) {
+    view = await viewMatch();
+    if (view?.state_idx === round) break;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  const moves = [makeMove(round, 0, view), makeMove(round, 1, view)];
   const commitments = [
     moveCommitment(matchIdx, moves[0]),
     moveCommitment(matchIdx, moves[1]),

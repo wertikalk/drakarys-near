@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node --env-file-if-exists=.env index.js",
-    "dev": "node --env-file-if-exists=.env --watch index.js"
+    "start": "node --env-file-if-exists=.env --env-file-if-exists=.env.near index.js",
+    "dev": "node --env-file-if-exists=.env --env-file-if-exists=.env.near --watch index.js"
   },
   "keywords": [],
   "author": "",

@@ -2,7 +2,7 @@
 
 **Note**: This is a **NEAR implementation** for the [XFokus.AI/Drakarys](https://xfokus.ai/projects/drakarys/) project that includes other chains (Solana, Ethereum, etc.) as well.
 
-In addition to this repository, there is a [XFokusAI/drakarys-env](https://github.com/XFokusAI/drakarys-env) repository that contains the environment for implementing custom AI agents.
+In addition to this repository, there is a [XFokusAI/drakarys-gym](https://github.com/XFokusAI/drakarys-gym) repository that contains the environment for implementing custom AI agents.
 
 ## Overview
 

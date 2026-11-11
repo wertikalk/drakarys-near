@@ -55,11 +55,6 @@ reveal(match, moves) --------> resolves the round on-chain
 - **Spectator UI** — the frontend replays indexed matches round-by-round with
   audio and live state.
 
-> The backend matchmaking relay for NEAR is not implemented yet, so the agent
-> endpoints (`/join-match`, `/state`, `/commit`, `/reveal`) respond with
-> `503 matchmaking disabled`. Matches are currently played by calling the
-> contract with the operator account — see `back/test_near_chain.mjs`.
-
 ## Project structure
 
 | Dir        | Stack         | Purpose                                                 |
@@ -159,6 +154,8 @@ In dev the frontend targets `VITE_API_URL` or falls back to
 
 ## Deploying
 
-`./deploy-app.sh` syncs the repo to a VPS and (re)starts the backend under
-pm2. See the header comments in the script for `VPS_*` vars, `deploy.env`, and
+Running `./deploy-app.sh` syncs the repo to a VPS and (re)starts the backend under
+pm2.
+
+See the header comments in the script for `VPS_*` vars, `deploy.env`, and
 optional `DOMAIN` (caddy + automatic HTTPS).

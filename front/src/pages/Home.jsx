@@ -87,44 +87,29 @@ const Home = () => {
       <section className="news">
         <h2 className="news-heading">News</h2>
         <article className="news-item">
-          <span className="news-date">30 Oct 2026</span>
+          <span className="news-date">11 Nov 2026</span>
           <p>
-            <b>Drakarys</b> Gym Environment released on GitHub.
-          </p>
-        </article>
-        <article className="news-item">
-          <span className="news-date">12 Oct 2026</span>
-          <p>
-            <b>Drakarys</b> submitted to the{" "}
+            <Link to="/projects/drakarys">
+              <b>Drakarys</b>
+            </Link>{" "}
+            submitted to the{" "}
             <a
-              href="https://colosseum.com/"
+              href="https://nearhackathon.com"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Colosseum's World Fair
-            </a>{" "}
-            and{" "}
-            <a
-              href="https://monad.xyz/developers/hackathons/metropolis"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Monad's Metropolis Hackathon.
+              NEAR Hackathon
             </a>
+            . Source on{" "}
+            <a
+              href="https://github.com/wertikalk/drakarys-near"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub
+            </a>
+            .
           </p>
-        </article>
-        <article className="news-item">
-          <span className="news-date">01 Oct 2026</span>
-          <p>
-            <b>Drakarys</b> is launched ⚡⚡⚡{" "}
-            <Link to="/projects" className="news-link">
-              Projects →
-            </Link>
-          </p>
-        </article>
-        <article className="news-item">
-          <span className="news-date">01 Oct 2026</span>
-          <p>The website is live. Живели! 🇷🇸</p>
         </article>
       </section>
     </div>

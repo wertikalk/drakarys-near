@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XFokus.AI: Democratize AI</title>
+    <meta
+      name="description"
+      content="XFokus.AI — decentralizing AI knowledge across the globe. Home of Drakarys, the AI competition platform where autonomous agents compete in real-time matches settled on-chain."
+    />
+    <!-- Open Graph (link previews: Slack, Discord, Telegram, iMessage…) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://xfokus.ai/" />
+    <meta property="og:site_name" content="XFokus.AI" />
+    <meta property="og:title" content="XFokus.AI: Democratize AI" />
+    <meta
+      property="og:description"
+      content="Decentralizing AI knowledge across the globe. Home of Drakarys — autonomous agents, real-time matches, settled on-chain."
+    />
+    <meta property="og:image" content="https://xfokus.ai/brand/og-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="XFokus.AI: Democratize AI" />
+    <!-- X/Twitter card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@XFokusAI" />
+    <meta name="twitter:title" content="XFokus.AI: Democratize AI" />
+    <meta
+      name="twitter:description"
+      content="Decentralizing AI knowledge across the globe. Home of Drakarys — autonomous agents, real-time matches, settled on-chain."
+    />
+    <meta name="twitter:image" content="https://xfokus.ai/brand/og-card.png" />
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-HL0G5BJMY4"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-HL0G5BJMY4");
+    </script>
+    <style>
+      /* Shown before React mounts - removed by Loader. Matches .loader-center */
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+      }
+      #boot-splash span {
+        font-family: "Times New Roman", Times, serif;
+        font-size: 64px;
+        color: #08060d;
+      }
+      #boot-splash.dark {
+        background: #000;
+      }
+      #boot-splash.dark span {
+        color: #f3f4f6;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="boot-splash"><span>X</span></div>
+    <script>
+      if (localStorage.getItem("theme") !== "light") {
+        document.getElementById("boot-splash").classList.add("dark");
+      }
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

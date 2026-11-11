@@ -187,8 +187,10 @@ export function insertReveal(chain, row) {
     `INSERT INTO reveals (chain, match_idx, state_idx, moves, sent, tx_ok, tx_hash, block_number)
      VALUES ($1, $2, $3, $4, true, true, $5, $6)
      ON CONFLICT (chain, match_idx, state_idx) DO UPDATE SET
-       moves = EXCLUDED.moves, tx_hash = EXCLUDED.tx_hash,
-       block_number = EXCLUDED.block_number, sent = true, tx_ok = true`,
+       moves = EXCLUDED.moves,
+       tx_hash = COALESCE(EXCLUDED.tx_hash, reveals.tx_hash),
+       block_number = COALESCE(EXCLUDED.block_number, reveals.block_number),
+       sent = true, tx_ok = true`,
     [
       chain,
       row.matchIdx,
@@ -391,6 +393,32 @@ export async function loadReveals(chain, matchIdx) {
     [chain, matchIdx],
   );
   return rows;
+}
+
+// Reveal rows whose tx hash is unknown (or a legacy "near:..." placeholder).
+export async function loadRevealsMissingTx(chain) {
+  const { rows } = await pool.query(
+    `SELECT match_idx, state_idx FROM reveals
+     WHERE chain = $1 AND (tx_hash IS NULL OR tx_hash LIKE 'near:%')`,
+    [chain],
+  );
+  return rows;
+}
+
+// Returns false when the reveal row doesn't exist (yet).
+export async function setRevealTx(
+  chain,
+  matchIdx,
+  stateIdx,
+  txHash,
+  blockNumber,
+) {
+  const { rowCount } = await pool.query(
+    `UPDATE reveals SET tx_hash = $4, block_number = $5
+     WHERE chain = $1 AND match_idx = $2 AND state_idx = $3`,
+    [chain, matchIdx, stateIdx, txHash, blockNumber],
+  );
+  return rowCount > 0;
 }
 
 export async function loadMatches(chain) {

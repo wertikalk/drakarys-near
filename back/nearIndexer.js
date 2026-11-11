@@ -17,6 +17,10 @@ const N_ROUNDS = 20;
 const INITIAL_SLEEP_MS = 10 * 60 * 1000; // 10 minutes
 const ACTIVITY_SLEEP_MS = 15 * 60 * 1000; // 15 minutes
 const DISCOVERY_PAGE = 256; // match ids per get_match_ids call
+const TX_BATCH = 20; // tx hashes per /v0/transactions call
+const TX_MAX_PAGES = 10; // account tx history pages scanned per attempt
+const TX_RETRY_MS = 10_000;
+const TX_MAX_ATTEMPTS = 5;
 
 // Shared across indexer instances - see indexer.js.
 const dbReady = db
@@ -34,6 +38,9 @@ const num = (v) => (typeof v === "object" && v !== null ? Number(v) : v);
 export function createNearIndexer({
   rpcUrl,
   contractAddress, // the account the contract is deployed to
+  // FastNear-style tx API (e.g. https://tx.test.fastnear.com) used to map
+  // reveals to their transaction hashes for explorer links; null = no links
+  txApiUrl = null,
   label = null,
   // match ids to never index (test artifacts)
   ignoredMatches = [],
@@ -53,6 +60,9 @@ export function createNearIndexer({
   let isSleeping = false;
   let lastActivityTime = Date.now();
   let discoverOffset = 0; // paging cursor over get_match_ids
+  const pendingTx = new Set(); // "matchIdx:stateIdx" reveals lacking a tx hash
+  let txAttempts = 0;
+  let nextTxResolveAt = 0;
 
   // Write-through persistence - same fire-and-forget style as indexer.js.
   const persist = (fn, what) =>
@@ -214,11 +224,14 @@ export function createNearIndexer({
                 commands: mv.commands.map((c) => c.toString()),
                 seedPart: mv.seed_part.toString(),
               })),
-              txHash: `near:${chain}:${matchIdx}:${num(e.state_idx)}:reveal`,
+              txHash: null, // filled in by resolveRevealTxs
               blockNumber: null,
             }),
           `reveal ${matchIdx}/${num(e.state_idx)}`,
         );
+        pendingTx.add(`${matchIdx}:${num(e.state_idx)}`);
+        txAttempts = 0;
+        nextTxResolveAt = 0;
       }
     }
   }
@@ -273,6 +286,71 @@ export function createNearIndexer({
     ) {
       recordActivity();
       persistMatch(matchIdx, entry);
+    }
+  }
+
+  async function txApi(path, body) {
+    const res = await fetch(`${txApiUrl}${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`tx api ${res.status}`);
+    return res.json();
+  }
+
+  // View calls carry no transaction info, so reveal tx hashes come from the
+  // contract account's tx history: walk it newest-first and match each
+  // `reveal` call's args to the reveals still missing a hash.
+  async function resolveRevealTxs() {
+    if (!txApiUrl || !dbOk || pendingTx.size === 0) return;
+    if (Date.now() < nextTxResolveAt) return;
+    let token = null;
+    for (let page = 0; page < TX_MAX_PAGES && pendingTx.size; page++) {
+      const { account_txs: txs = [], resume_token } = await txApi(
+        "/v0/account",
+        {
+          account_id: contractAddress,
+          ...(token ? { resume_token: token } : {}),
+        },
+      );
+      const hashes = txs
+        .filter((t) => t.is_receiver && t.is_function_call && t.is_success)
+        .map((t) => t.transaction_hash);
+      for (let i = 0; i < hashes.length && pendingTx.size; i += TX_BATCH) {
+        const { transactions = [] } = await txApi("/v0/transactions", {
+          tx_hashes: hashes.slice(i, i + TX_BATCH),
+        });
+        for (const t of transactions) {
+          const call = t.transaction?.actions?.[0]?.FunctionCall;
+          if (call?.method_name !== "reveal") continue;
+          const args = JSON.parse(Buffer.from(call.args, "base64").toString());
+          const stateIdx = args.moves?.[0]?.state_idx;
+          const key = `${args.match_idx}:${stateIdx}`;
+          if (!pendingTx.has(key)) continue;
+          const saved = await db.setRevealTx(
+            chain,
+            args.match_idx,
+            stateIdx,
+            t.transaction.hash,
+            t.execution_outcome?.block_height ?? null,
+          );
+          if (saved) pendingTx.delete(key);
+        }
+      }
+      if (!resume_token || txs.length === 0) break;
+      token = resume_token;
+    }
+    if (pendingTx.size === 0) {
+      txAttempts = 0;
+    } else if (++txAttempts >= TX_MAX_ATTEMPTS) {
+      console.warn(
+        `${tag} no tx hash found for ${pendingTx.size} reveals - giving up`,
+      );
+      pendingTx.clear();
+      txAttempts = 0;
+    } else {
+      nextTxResolveAt = Date.now() + TX_RETRY_MS;
     }
   }
 
@@ -349,6 +427,11 @@ export function createNearIndexer({
         }
       }
 
+      await resolveRevealTxs().catch((err) => {
+        nextTxResolveAt = Date.now() + TX_RETRY_MS;
+        console.error(`${tag} tx hash lookup failed:`, err.message);
+      });
+
       // Check if we should go to sleep (15 minutes after last activity)
       const timeSinceActivity = Date.now() - lastActivityTime;
       if (timeSinceActivity > ACTIVITY_SLEEP_MS && !isSleeping) {
@@ -398,6 +481,9 @@ export function createNearIndexer({
               console.log(
                 `${tag} restored ${rows.length} matches from postgres`,
               );
+            }
+            for (const r of await db.loadRevealsMissingTx(chain)) {
+              pendingTx.add(`${r.match_idx}:${r.state_idx}`);
             }
           } catch (err) {
             console.error(`${tag} db restore failed:`, err.message);

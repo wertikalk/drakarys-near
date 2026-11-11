@@ -5,6 +5,7 @@
       "name": "near-testnet",
       "type": "near",
       "rpcUrl": "https://test.rpc.fastnear.com",
+      "txApiUrl": "https://tx.test.fastnear.com",
       "contractAddress": "dev-1794239937284-45iftw.testnet",
       "ignoredMatches": [758634],
       "icon": "near.svg",

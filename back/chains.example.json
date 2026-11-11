@@ -5,6 +5,7 @@
       "name": "near-testnet",
       "type": "near",
       "rpcUrl": "https://test.rpc.fastnear.com",
+      "txApiUrl": "https://tx.test.fastnear.com",
       "contractAddress": "<account-id>.testnet",
       "pollIntervalMs": 4000,
       "ignoredMatches": [],

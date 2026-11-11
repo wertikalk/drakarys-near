@@ -28,6 +28,7 @@ for (const chain of chains) {
     label: chain.name,
     rpcUrl: chain.rpcUrl,
     contractAddress: chain.contractAddress,
+    txApiUrl: chain.txApiUrl,
     ignoredMatches: chain.ignoredMatches,
     pollIntervalMs: chain.pollIntervalMs,
     onMatchStarted: (matchIdx) =>

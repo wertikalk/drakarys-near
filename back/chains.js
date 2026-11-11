@@ -8,6 +8,8 @@
 //   pollIntervalMs  indexer poll cadence (default INDEXER_POLL_MS || 2000)
 //   ignoredMatches  optional - match ids to hide from indexing
 //   explorer        optional - tx link template, e.g. https://.../txns/{tx}
+//   txApiUrl        optional - FastNear tx API used to look up reveal tx
+//                   hashes for the explorer links
 //   icon            optional - filename in ./icons, served at
 //                   /api/chains/icons/<icon>
 //   operatorKeyEnv  name of the env var holding the operator key - keep keys
@@ -38,6 +40,7 @@ const DEFAULT_CHAINS = [
     name: "near-testnet",
     type: "near",
     rpcUrl: "https://test.rpc.fastnear.com",
+    txApiUrl: "https://tx.test.fastnear.com",
     contractAddress: "dev-1794239937284-45iftw.testnet",
     operatorKeyEnv: "NEAR_OPERATOR_ACCOUNT",
     default: true,
@@ -81,6 +84,7 @@ export function loadChains() {
         c.contractAddress,
       icon: c.icon ?? null,
       explorer: c.explorer ?? null,
+      txApiUrl: c.txApiUrl ?? null,
       // match ids to hide from indexing (test artifacts)
       ignoredMatches: c.ignoredMatches ?? [],
       pollIntervalMs: num(

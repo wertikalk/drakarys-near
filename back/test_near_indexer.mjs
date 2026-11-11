@@ -59,13 +59,86 @@ const matches = {
       state(i, i < 10 ? 0 : 1, i % 11, i === 19 ? [2, 1] : [1, 1]),
     ),
     events: [
-      { kind: "match_started", state_idx: 0, team_idx: 0, player_idx: 0, x: 0, y: 0, goal: false, data: null, moves: null },
-      { kind: "move_committed", state_idx: 0, team_idx: 0, player_idx: 0, x: 0, y: 0, goal: false, data: [[1, 2, 3], [4, 5, 6]], moves: null },
-      { kind: "move_revealed", state_idx: 0, team_idx: 0, player_idx: 0, x: 0, y: 0, goal: false, data: null, moves: [move(0, 11), move(0, 22)] },
-      { kind: "shot", state_idx: 5, team_idx: 0, player_idx: 9, x: 800, y: 250, goal: true, data: null, moves: null },
-      { kind: "interception", state_idx: 8, team_idx: 1, player_idx: 4, x: 300, y: 200, goal: false, data: null, moves: null },
-      { kind: "shot", state_idx: 15, team_idx: 1, player_idx: 10, x: 100, y: 260, goal: true, data: null, moves: null },
-      { kind: "match_ended", state_idx: 19, team_idx: 0, player_idx: 0, x: 0, y: 0, goal: false, data: null, moves: null },
+      {
+        kind: "match_started",
+        state_idx: 0,
+        team_idx: 0,
+        player_idx: 0,
+        x: 0,
+        y: 0,
+        goal: false,
+        data: null,
+        moves: null,
+      },
+      {
+        kind: "move_committed",
+        state_idx: 0,
+        team_idx: 0,
+        player_idx: 0,
+        x: 0,
+        y: 0,
+        goal: false,
+        data: [
+          [1, 2, 3],
+          [4, 5, 6],
+        ],
+        moves: null,
+      },
+      {
+        kind: "move_revealed",
+        state_idx: 0,
+        team_idx: 0,
+        player_idx: 0,
+        x: 0,
+        y: 0,
+        goal: false,
+        data: null,
+        moves: [move(0, 11), move(0, 22)],
+      },
+      {
+        kind: "shot",
+        state_idx: 5,
+        team_idx: 0,
+        player_idx: 9,
+        x: 800,
+        y: 250,
+        goal: true,
+        data: null,
+        moves: null,
+      },
+      {
+        kind: "interception",
+        state_idx: 8,
+        team_idx: 1,
+        player_idx: 4,
+        x: 300,
+        y: 200,
+        goal: false,
+        data: null,
+        moves: null,
+      },
+      {
+        kind: "shot",
+        state_idx: 15,
+        team_idx: 1,
+        player_idx: 10,
+        x: 100,
+        y: 260,
+        goal: true,
+        data: null,
+        moves: null,
+      },
+      {
+        kind: "match_ended",
+        state_idx: 19,
+        team_idx: 0,
+        player_idx: 0,
+        x: 0,
+        y: 0,
+        goal: false,
+        data: null,
+        moves: null,
+      },
     ],
     ended: true,
   },
@@ -78,8 +151,28 @@ const matches = {
     state: state(3, 0, 5),
     states: Array.from({ length: 4 }, (_, i) => state(i, 0, i)),
     events: [
-      { kind: "match_started", state_idx: 0, team_idx: 0, player_idx: 0, x: 0, y: 0, goal: false, data: null, moves: null },
-      { kind: "move_revealed", state_idx: 2, team_idx: 0, player_idx: 0, x: 0, y: 0, goal: false, data: null, moves: [move(2, 33), move(2, 44)] },
+      {
+        kind: "match_started",
+        state_idx: 0,
+        team_idx: 0,
+        player_idx: 0,
+        x: 0,
+        y: 0,
+        goal: false,
+        data: null,
+        moves: null,
+      },
+      {
+        kind: "move_revealed",
+        state_idx: 2,
+        team_idx: 0,
+        player_idx: 0,
+        x: 0,
+        y: 0,
+        goal: false,
+        data: null,
+        moves: [move(2, 33), move(2, 44)],
+      },
     ],
     ended: false,
   },
@@ -167,8 +260,10 @@ check(
   "match 7 interception bucketed at round 8",
   e7.events[8]?.[0]?.kind === "interception",
 );
-check("match 7 lifecycle events not in render events",
-  !(e7.events[0] ?? []).some((e) => e.kind === "match_started"));
+check(
+  "match 7 lifecycle events not in render events",
+  !(e7.events[0] ?? []).some((e) => e.kind === "match_started"),
+);
 
 const e9 = indexer.get(9);
 check("match 9 in progress", e9.ended === false && e9.states.length === 4);
@@ -187,8 +282,7 @@ const payload = toMatchPayload(7, e7);
 check("payload: status finished", payload.status === "finished");
 check(
   "payload: roster populated",
-  Object.keys(payload.roster).length === 22 &&
-    payload.roster.A10.skill === 50,
+  Object.keys(payload.roster).length === 22 && payload.roster.A10.skill === 50,
 );
 check(
   "payload: state views built",
@@ -196,8 +290,19 @@ check(
     payload.states[0].players.length === 22 &&
     payload.states[0].ball.hasBall !== null,
 );
-check("payload: agent ids shortened",
-  payload.agent0.startsWith("0x1111") && payload.agent0.includes("…"));
+check(
+  "payload: agent ids shortened",
+  payload.agent0.startsWith("0x1111") && payload.agent0.includes("…"),
+);
+
+// ---- matches created after the first poll are still discovered -------
+
+matches[12] = { ...matches[9], match_idx: 12 };
+await indexer._tickOnce();
+check(
+  "discovers a match created after startup",
+  indexer.matches.length === 3 && indexer.get(12)?.states.length === 4,
+);
 
 rpc.close();
 console.log(failed ? `\n${failed} checks FAILED` : "\nALL CHECKS PASSED");

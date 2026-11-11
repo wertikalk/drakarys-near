@@ -55,16 +55,19 @@ console.log(`match ${matchIdx} on ${CONTRACT}`);
 console.log(`agent0: ${agents[0].address}`);
 console.log(`agent1: ${agents[1].address}`);
 
-const zeroDelta = () => Array.from({ length: 11 }, () => [0, 0]);
+const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
 
 // small seeds (<2^53) - the JSON arg serializer is exact below that
 const seed = () => Math.floor(Math.random() * 2 ** 40);
 
-function makeMove(stateIdx, shoot) {
-  const d = zeroDelta();
-  // move a couple of players forward so positions change on-chain
-  d[5] = [3, 1];
-  d[9] = [4, 0];
+function makeMove(stateIdx, team, shoot) {
+  // every outfield player pushes toward the opponent's goal (team 0 attacks
+  // +x, team 1 attacks -x) with some lateral drift; the contract pins the
+  // goalkeeper (idx 0) and caps deltas at +-5
+  const dir = team === 0 ? 1 : -1;
+  const d = Array.from({ length: 11 }, (_, j) =>
+    j === 0 ? [0, 0] : [dir * randInt(1, 5), randInt(-5, 5)],
+  );
   return {
     stateIdx,
     deltaPlayerPositions: d,
@@ -99,7 +102,10 @@ const toContractMove = (m) => ({
 
 console.log("playing 20 rounds of commit/reveal on testnet ...");
 for (let round = 0; round < N_ROUNDS; round++) {
-  const moves = [makeMove(round, round % 4 === 3), makeMove(round, false)];
+  const moves = [
+    makeMove(round, 0, round % 4 === 3),
+    makeMove(round, 1, false),
+  ];
   const commitments = [
     moveCommitment(matchIdx, moves[0]),
     moveCommitment(matchIdx, moves[1]),

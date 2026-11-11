@@ -53,7 +53,6 @@ export function createNearIndexer({
   let isSleeping = false;
   let lastActivityTime = Date.now();
   let discoverOffset = 0; // paging cursor over get_match_ids
-  let discoverDone = false;
 
   // Write-through persistence - same fire-and-forget style as indexer.js.
   const persist = (fn, what) =>
@@ -279,18 +278,17 @@ export function createNearIndexer({
 
   async function discover() {
     // Page through get_match_ids; the contract lists ids in creation order.
-    while (!discoverDone) {
+    // The cursor persists across polls, so each poll only fetches ids
+    // created since the last one.
+    for (;;) {
       const ids = await callView("get_match_ids", {
         offset: discoverOffset,
         limit: DISCOVERY_PAGE,
       });
-      if (!Array.isArray(ids) || ids.length === 0) {
-        discoverDone = true;
-        break;
-      }
+      if (!Array.isArray(ids) || ids.length === 0) break;
       for (const id of ids) addMatch(num(id));
       discoverOffset += ids.length;
-      if (ids.length < DISCOVERY_PAGE) discoverDone = true;
+      if (ids.length < DISCOVERY_PAGE) break;
     }
   }
 
